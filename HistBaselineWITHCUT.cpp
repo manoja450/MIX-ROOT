@@ -57,9 +57,9 @@ void HistBaselineRMS(const char* filename) {
             // Construct the draw command: baselineRMS[ch] is plotted with 100 bins in the range [0, 10]
             TString drawCmd;
             if (isPMT && ch < 12) {
-                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 5)", pmtChannelMap[ch], histName.Data());
+                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 7)", pmtChannelMap[ch], histName.Data());
             } else if (isSiPM && ch - 12 < 10) {
-                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 5)", sipmChannelMap[ch - 12], histName.Data());
+                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 7)", sipmChannelMap[ch - 12], histName.Data());
             }
 
             // Draw the first histogram for the current channel (all data)
@@ -134,4 +134,3 @@ int main(int argc, char** argv) {
     HistBaselineRMS(filename); // Call the function to plot histograms
     return 0;
 }
-
