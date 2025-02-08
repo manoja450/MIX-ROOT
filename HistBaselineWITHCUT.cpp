@@ -88,7 +88,8 @@ void HistBaselineRMS(const char* filename) {
                 if (histAfterCut) {
                     histAfterCut->SetLineColor(kRed); // Set the color for the histogram after cut (Red)
                 }
-
+                     // Set large font size for title
+                    gStyle->SetTitleFontSize(0.11);  // You can adjust this size to fit your needs
                 // Set titles and labels for the histograms
                 if (isPMT && ch < 12) {
                     int pmtIndex = -1;
@@ -133,3 +134,4 @@ int main(int argc, char** argv) {
     HistBaselineRMS(filename); // Call the function to plot histograms
     return 0;
 }
+
