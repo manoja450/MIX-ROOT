@@ -40,7 +40,7 @@ void HistBaselineRMS(const char* filename) {
         {-1,  10,  11,  2,  13},   // Row 5 (PMT10, PMT11, PMT2, SiPM13)
         {-1,  14,  18,  -1, -1}    // Row 6 (SiPM14, SiPM18)
     };
-    
+
     / Create a large font textbox on the master canvas
     masterCanvas->cd(0); // Select the canvas itself (outside the pads)
     TLatex *textbox = new TLatex(); // Create a TLatex object for drawing text
@@ -49,6 +49,7 @@ void HistBaselineRMS(const char* filename) {
     textbox->SetNDC(true);      // Use normalized device coordinates
     textbox->DrawLatex(0.01, 0.10, "X axis: BaselineRMS"); // Draw the first line of text
     textbox->DrawLatex(0.01, 0.08, "Y axis: Counts"); // Draw the second line of text
+    
     // Loop through the layout and plot histograms for each channel
     for (int row = 0; row < 6; ++row) {
         for (int col = 0; col < 5; ++col) {
@@ -65,42 +66,19 @@ void HistBaselineRMS(const char* filename) {
 
             // Construct the draw command: baselineRMS[ch] is plotted with 100 bins in the range [0, 10]
             TString drawCmd;
-            if (isPMT && ch < 12) {
-                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 10)", pmtChannelMap[ch], histName.Data());
-            } else if (isSiPM && ch - 12 < 10) {
-                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 10)", sipmChannelMap[ch - 12], histName.Data());
+            if (isPMT) {
+                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 5)", pmtChannelMap[ch], histName.Data());
+            } else if (isSiPM) {
+                drawCmd = TString::Format("baselineRMS[%d] >> %s(100, 0, 5)", sipmChannelMap[ch - 12], histName.Data());
             }
 
-            // Draw the first histogram for the current channel (all data)
+            // Draw the histogram for the current channel
             tree->Draw(drawCmd, "", "hist");
 
-            // Retrieve the histogram from the pad
+            // Retrieve the histogram from the pad and set titles and labels
             TH1 *hist = (TH1*)gPad->GetPrimitive(histName);
             if (hist) {
-                // Calculate the mean of the histogram
-                double mean = hist->GetMean();
-
-                // Create a new histogram for data after applying the cut (values above the mean)
-                TString histAfterCutName = TString::Format("hist_baselineRMS_cut_ch%d", ch);
-                TString drawCmdAfterCut;
-                if (isPMT && ch < 12) {
-                    drawCmdAfterCut = TString::Format("baselineRMS[%d] >> %s(100, 0, 10)", pmtChannelMap[ch], histAfterCutName.Data());
-                } else if (isSiPM && ch - 12 < 10) {
-                    drawCmdAfterCut = TString::Format("baselineRMS[%d] >> %s(100, 0, 10)", sipmChannelMap[ch - 12], histAfterCutName.Data());
-                }
-
-                // Draw the second histogram with the cut (only values greater than mean)
-                tree->Draw(drawCmdAfterCut, TString::Format("baselineRMS[%d] > %f", (isPMT ? pmtChannelMap[ch] : sipmChannelMap[ch - 12]), mean), "hist same");
-
-                // Retrieve the new histogram
-                TH1 *histAfterCut = (TH1*)gPad->GetPrimitive(histAfterCutName);
-                if (histAfterCut) {
-                    histAfterCut->SetLineColor(kRed); // Set the color for the histogram after cut (Red)
-                }
-                     // Set large font size for title
-                    gStyle->SetTitleFontSize(0.11);  // You can adjust this size to fit your needs
-                // Set titles and labels for the histograms
-                if (isPMT && ch < 12) {
+                if (isPMT) {
                     int pmtIndex = -1;
                     for (int i = 0; i < 12; ++i) {
                         if (pmtChannelMap[i] == ch) {
@@ -108,8 +86,10 @@ void HistBaselineRMS(const char* filename) {
                             break;
                         }
                     }
+                    // Set large font size for title
+                    gStyle->SetTitleFontSize(0.11);  // You can adjust this size to fit your needs
                     hist->SetTitle(TString::Format("PMT %d ", pmtIndex));
-                } else if (isSiPM && ch - 12 < 10) {
+                } else if (isSiPM) {
                     hist->SetTitle(TString::Format("SiPM %d ", sipmChannelMap[ch - 12] - 11)); // SiPM number starts from 1
                 }
                 hist->GetXaxis()->SetTitle("Baseline RMS"); // Label the X-axis
@@ -118,7 +98,6 @@ void HistBaselineRMS(const char* filename) {
                 // Save the individual histogram as a PNG image
                 TCanvas *individualCanvas = new TCanvas(TString::Format("Canvas_ch%d", ch), TString::Format("Channel %d Histogram", ch), 800, 600);
                 hist->Draw();
-                histAfterCut->Draw("same"); // Overlay the second histogram
                 individualCanvas->SaveAs(TString::Format("channel_%d_histogram.png", ch));
                 delete individualCanvas; // Clean up the individual canvas
             }
@@ -143,3 +122,5 @@ int main(int argc, char** argv) {
     HistBaselineRMS(filename); // Call the function to plot histograms
     return 0;
 }
+
+
